@@ -1,0 +1,62 @@
+# spring
+spring:
+  profiles:
+    active: dev
+  # exclude jdbc
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  #datasource:
+  #  driver-class-name: com.mysql.jdbc.Driver
+  #  url: jdbc:mysql://localhost:3306/girl?useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2b8
+  #  username: root
+  #  password: root
+
+
+########################################## mybatis Info #####################################
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration.map-underscore-to-camel-case: true
+  # 打印mybatis日志，生产环境请注释该配置
+  configuration.log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# log info
+logging:
+  config: classpath:log4j2.xml
+
+# log info
+#logging:
+#  level:
+#    root: info
+#    org.code.blocks: debug
+
+http:
+    request-time-out: 15000
+    max-active: 100
+    validate-after-inactivity: 1000
+    proxy-host:
+    proxy-port: 80
+
+task:
+  refresh:
+    corePoolSize: 10
+    maxPoolSize: 200
+    queueCapacity: 10
+  cron:
+    test: 0/3 * * * * ?
+
+common:
+    corePoolSize: 100
+    maxPoolSize: 500
+    queueCapacity: 100
+    keepAliveSeconds: 60
+
+
+code:
+  blocks:
+    cros:
+##      config: *@/**
+      config: https://a.com,https://b.com@/**
+
+
+

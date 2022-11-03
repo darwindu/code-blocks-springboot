@@ -1,0 +1,183 @@
+group 'org.code.blocks'
+version "0.1.4"
+
+def gradle_version = "4"
+
+if (gradle.gradleVersion.startsWith("6") ||
+        gradle.gradleVersion.startsWith("5") ||
+        gradle.gradleVersion.startsWith("4.10") ||
+        gradle.gradleVersion.startsWith("4.9")
+)
+{
+    println "Gradle with version >= 4.9 detected"
+    gradle_version = "5-6"
+}
+else if (gradle.gradleVersion.startsWith("7")) {
+    println "Gradle with version >= 7 detected"
+    gradle_version = "7"
+}
+else {
+    println "Gradle with version < 4.9 detected"
+}
+
+apply plugin: 'maven-publish' // gradle7放开
+apply plugin: 'java-library' // gradle7放开
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+// Specify JDK version - may vary in different scenarios
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+[compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
+// In this section you declare where to find the dependencies of your project
+repositories {
+    maven {
+        allowInsecureProtocol=true // gradle7放开
+        url "http://maven.aliyun.com/nexus/content/groups/public/"
+    }
+    mavenLocal()
+    mavenCentral()
+}
+
+List lombok = [
+        "org.projectlombok:lombok:$lombok_version"
+]
+
+List apache = [
+        "org.apache.commons:commons-lang3:$apache_commons_version"
+]
+
+List logger = [
+        "org.slf4j:jul-to-slf4j:$slf4j_version",
+        //可注释, 依赖jul-to-slf4j
+        "org.slf4j:slf4j-api:$slf4j_version",
+        "org.apache.logging.log4j:log4j-api:$logger_version",
+        //可注释, 依赖log4j-api
+        "org.apache.logging.log4j:log4j-core:$logger_version",
+        //用于与slf4j保持桥接
+        "org.apache.logging.log4j:log4j-slf4j-impl:$logger_version"
+        //web工程需要包含log4j-web，非web工程不需要
+        // "org.apache.logging.log4j:log4j-web:2.1"
+]
+
+List junit = [
+        "junit:junit:$junit_version",
+]
+List springboot = [
+        "org.springframework.boot:spring-boot-starter:$springboot_version",
+        "org.springframework.boot:spring-boot-starter-web:$springboot_version",
+        "org.springframework.boot:spring-boot-autoconfigure:$springboot_version",
+        "org.springframework.boot:spring-boot-configuration-processor:$springboot_version",
+        "org.springframework.boot:spring-boot-starter-log4j2:$springboot_version",
+        "org.springframework.boot:spring-boot-starter-aop:$springboot_version",
+        "org.springframework.boot:spring-boot-starter-test:$springboot_version"
+]
+
+List spring =[
+        "org.springframework:spring-tx:$spring_version",
+        "org.springframework:spring-jdbc:$spring_version",
+        "org.springframework:spring-context-support:$spring_version"
+]
+
+/*hibertnate 入参校验支持包*/
+List validate = [
+        "org.hibernate:hibernate-validator:$hibernate_validator_version"
+]
+
+List mybatis = [
+        "org.mybatis.spring.boot:mybatis-spring-boot-starter:$mybatis_springboot_version"
+]
+
+List mysql = [
+        "mysql:mysql-connector-java:$mysql_version"
+]
+
+List httpclient = [
+        "org.apache.httpcomponents:httpclient:$httpclient_version"
+]
+
+// 解决日志冲突，踢出logback: spring-boot-starter-logging
+configurations {
+    all*.exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+}
+
+dependencies {
+    //compile apache, logger
+    //testCompile apache, logger, junit
+
+    if (gradle_version.startsWith("4")) {
+        compile apache, logger, lombok, springboot, spring, validate, mybatis, mysql, httpclient
+        testCompile apache, logger, lombok, junit, springboot, spring, validate, mybatis, mysql, httpclient
+    }
+    if (gradle_version.startsWith("5-6")) {
+        compileOnly apache, logger, lombok, springboot, spring, validate, mybatis, mysql, httpclient
+        annotationProcessor apache, logger, lombok, springboot, spring, validate, mybatis, mysql, httpclient
+        //testAnnotationProcessor apache, logger, lombok, junit
+        testCompile apache, logger, lombok, junit, springboot, spring, validate, mybatis, mysql, httpclient
+    }
+    // gradle7
+    // 依赖引入上，complie命令改为api/implementation，runtime改为runtimeOnly,去除testCompile
+    if (gradle_version.startsWith("7")) {
+        implementation apache, logger, lombok, springboot, spring, validate, mybatis, mysql, httpclient
+        runtimeOnly apache, logger, lombok, springboot, spring, validate, mybatis, mysql, httpclient
+        testImplementation apache, logger, lombok, junit, springboot, spring, validate, mybatis, mysql, httpclient
+        annotationProcessor apache, logger, lombok, springboot, spring, validate, mybatis, mysql, httpclient
+        testAnnotationProcessor logger, lombok
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
+    }
+}
+
+// ### springboot 打包方式
+// springBoot {
+//    mainClass = 'cn.webank.ngis.core.biz.server.NgisCoreServer'
+//}
+//springboot升级2.5.1时，构建的jar包会默认在最后添加plain后缀，需要在build.gradle中修改如下：
+//jar {
+//    enabled = true
+//    archiveClassifier=''
+//}
+
+jar {
+
+    destinationDir file('dist/app')
+    //destinationDirectory file('dist/app') // gradle 7
+
+    doLast {
+        archiveFileName project.name + '-' + version + '.jar' // gradle 7
+
+        exclude '**/*.xml'
+        exclude '**/*.properties'
+
+        copy {
+            from file('src/main/resources/')
+            into 'dist/conf'
+        }
+        copy {
+            from configurations.runtimeClasspath // gradle7放开
+            into 'dist/lib'
+        }
+        copy {
+            from file('.').listFiles().findAll { File f -> (f.name.endsWith('.bat') || f.name.endsWith('.sh') || f.name.endsWith('.env')) }
+            into 'dist'
+        }
+    }
+}

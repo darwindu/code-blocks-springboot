@@ -1,0 +1,7 @@
+# app service port
+server:
+  port: 8081
+  context-path: /codeblocks
+  # springboot版本升级配置，等于server.context-path
+  servlet:
+    context-path: /codeblocks
