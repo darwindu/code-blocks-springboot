@@ -148,7 +148,7 @@ sourceSets {
 
 // ### springboot 打包方式
 // springBoot {
-//    mainClass = 'cn.webank.ngis.core.biz.server.NgisCoreServer'
+//    mainClass = 'org.code.blocks.springboot.Application'
 //}
 //springboot升级2.5.1时，构建的jar包会默认在最后添加plain后缀，需要在build.gradle中修改如下：
 //jar {

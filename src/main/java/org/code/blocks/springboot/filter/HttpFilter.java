@@ -60,9 +60,9 @@ public class HttpFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest)request;
         HttpServletResponse resp = (HttpServletResponse)response;
 
-        // 请求源：http://iasweb.test.webank.com
+        // 请求源：http://xx.test.xx.com
         String reqOrigin = req.getHeader(HttpHeaders.ORIGIN);
-        // 请求域名，例如：iasweb.test.webank.com
+        // 请求域名，例如：xx.test.xx.com
         String reqHost = req.getHeader(HttpHeaders.HOST);
         // 服务接口强制增加：https协议，目的与请求源进行匹配
         String reqHostHttps = "https://" + reqHost;
@@ -89,7 +89,7 @@ public class HttpFilter implements Filter {
             resp.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, reqOrigin);
             resp.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, Boolean.TRUE.toString());
             if (StringUtils.equalsAny(req.getMethod(), HttpMethod.OPTIONS.toString())) {
-                resp.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "clientid, clientversion, content-type, graytype, ngiid, trackid, unionid, userid, uuid, webankappid, webanktoken");
+                //resp.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "clientid, clientversion, content-type, graytype, ngiid, trackid, unionid, userid, uuid");
                 resp.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, RequestMethod.POST.toString());
             }
         }
